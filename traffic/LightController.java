@@ -9,7 +9,8 @@ import java.util.Objects;
 
 public class LightController {
 
-    private static final double GREEN_DURATION_SECONDS = 2.0;
+    private static final double NORMAL_GREEN_DURATION_SECONDS = 2.0;
+    private static final double FULL_LANE_GREEN_DURATION_SECONDS = 4.0;
     private static final double ALL_RED_DURATION_SECONDS = 0.5;
 
     private final Map<Direction, Lane> lanes;
@@ -19,9 +20,11 @@ public class LightController {
     private LightPhase phase = LightPhase.ALL_RED;
     private double phaseStartedSeconds = 0.0;
     private Direction lastServedDirection = Direction.WEST;
+    private Direction greenDirection;
+    private double currentGreenDurationSeconds = NORMAL_GREEN_DURATION_SECONDS;
 
     public LightController(Map<Direction, Lane> lanes) {
-        this(lanes, new RoundRobinStrategy());
+        this(lanes, new CongestionStrategy());
     }
 
     public LightController(
@@ -56,7 +59,9 @@ public class LightController {
         double phaseDuration = elapsedSeconds - phaseStartedSeconds;
 
         if (phase == LightPhase.GREEN) {
-            if (phaseDuration >= GREEN_DURATION_SECONDS) {
+            extendGreenTimeIfLaneIsFull();
+
+            if (phaseDuration >= currentGreenDurationSeconds) {
                 startAllRedPhase(elapsedSeconds);
             }
 
@@ -92,12 +97,24 @@ public class LightController {
     private void startGreenPhase(Direction direction, double elapsedSeconds) {
         lights.get(direction).setColor(LightColor.GREEN);
         lastServedDirection = direction;
+        greenDirection = direction;
+        currentGreenDurationSeconds = lanes.get(direction).isFull()
+                ? FULL_LANE_GREEN_DURATION_SECONDS
+                : NORMAL_GREEN_DURATION_SECONDS;
         phase = LightPhase.GREEN;
         phaseStartedSeconds = elapsedSeconds;
     }
 
+    private void extendGreenTimeIfLaneIsFull() {
+        if (lanes.get(greenDirection).isFull()) {
+            currentGreenDurationSeconds = FULL_LANE_GREEN_DURATION_SECONDS;
+        }
+    }
+
     private void startAllRedPhase(double elapsedSeconds) {
         setAllLights(LightColor.RED);
+        greenDirection = null;
+        currentGreenDurationSeconds = NORMAL_GREEN_DURATION_SECONDS;
         phase = LightPhase.ALL_RED;
         phaseStartedSeconds = elapsedSeconds;
     }
