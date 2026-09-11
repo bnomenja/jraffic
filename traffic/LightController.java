@@ -1,11 +1,12 @@
 package traffic;
 
-import model.Direction;
-import model.Lane;
-
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import model.Direction;
+import model.Lane;
 
 public class LightController {
 
@@ -15,6 +16,7 @@ public class LightController {
 
     private final Map<Direction, Lane> lanes;
     private final Map<Direction, TrafficLight> lights = new EnumMap<>(Direction.class);
+    private final List<LightObserver> observers = new ArrayList<>();
     private final TrafficControlStrategy strategy;
 
     private LightPhase phase = LightPhase.ALL_RED;
@@ -55,6 +57,14 @@ public class LightController {
         return phase;
     }
 
+    public void addObserver(LightObserver observer) {
+        observers.add(Objects.requireNonNull(observer, "observer cannot be null"));
+    }
+
+    public void removeObserver(LightObserver observer) {
+        observers.remove(observer);
+    }
+
     public void update(double elapsedSeconds, boolean intersectionEmpty) {
         double phaseDuration = elapsedSeconds - phaseStartedSeconds;
 
@@ -89,13 +99,36 @@ public class LightController {
     }
 
     private void setAllLights(LightColor color) {
-        for (TrafficLight light : lights.values()) {
-            light.setColor(color);
+        for (Direction direction : Direction.values()) {
+            setLightColor(direction, color);
         }
     }
 
+    // include observer
+    private void setLightColor(Direction direction, LightColor color) {
+        TrafficLight light = lights.get(direction);
+
+        if (light.getColor() == color) {
+            return;
+        }
+
+        light.setColor(color);
+
+       // observer
+         notifyObservers(direction, color);
+    }
+
+    private void notifyObservers(Direction direction, LightColor color) {
+
+        for (LightObserver observer : List.copyOf(observers)) {
+            observer.onLightChanged(direction, color);
+        }
+
+
+    }
+
     private void startGreenPhase(Direction direction, double elapsedSeconds) {
-        lights.get(direction).setColor(LightColor.GREEN);
+        setLightColor(direction, LightColor.GREEN);
         lastServedDirection = direction;
         greenDirection = direction;
         currentGreenDurationSeconds = lanes.get(direction).isFull()
