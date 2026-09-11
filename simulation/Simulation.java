@@ -55,7 +55,7 @@ public class Simulation{
         double dt = nowSeconds - timeOfLastFrame;
         elapsedSeconds += dt;
 
-        scheduler.update(elapsedSeconds);
+        scheduler.update(elapsedSeconds, intersection.getCarsInside().isEmpty());
         updateCars(dt);
         timeOfLastFrame = nowSeconds;
     }

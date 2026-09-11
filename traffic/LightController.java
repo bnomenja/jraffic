@@ -9,13 +9,15 @@ import java.util.Objects;
 
 public class LightController {
 
-    private static final double CHANGE_INTERVAL_SECONDS = 2.0;
+    private static final double GREEN_DURATION_SECONDS = 2.0;
+    private static final double ALL_RED_DURATION_SECONDS = 0.5;
 
     private final Map<Direction, Lane> lanes;
     private final Map<Direction, TrafficLight> lights = new EnumMap<>(Direction.class);
     private final TrafficControlStrategy strategy;
 
-    private double lastChangeSeconds = 0.0;
+    private LightPhase phase = LightPhase.ALL_RED;
+    private double phaseStartedSeconds = 0.0;
     private Direction lastServedDirection = Direction.WEST;
 
     public LightController(Map<Direction, Lane> lanes) {
@@ -46,18 +48,29 @@ public class LightController {
         return lights.get(direction).isGreen();
     }
 
-    public void update(double elapsedSeconds) {
-        if (elapsedSeconds - lastChangeSeconds < CHANGE_INTERVAL_SECONDS) {
+    public LightPhase getPhase() {
+        return phase;
+    }
+
+    public void update(double elapsedSeconds, boolean intersectionEmpty) {
+        double phaseDuration = elapsedSeconds - phaseStartedSeconds;
+
+        if (phase == LightPhase.GREEN) {
+            if (phaseDuration >= GREEN_DURATION_SECONDS) {
+                startAllRedPhase(elapsedSeconds);
+            }
+
+            return;
+        }
+
+        if (phaseDuration < ALL_RED_DURATION_SECONDS || !intersectionEmpty) {
             return;
         }
 
         Map<Direction, Integer> waitingCars = countWaitingCars();
 
-        setAllLights(LightColor.RED);
         strategy.chooseNext(waitingCars, lastServedDirection)
-                .ifPresent(this::giveGreenLightTo);
-
-        lastChangeSeconds = elapsedSeconds;
+                .ifPresent(direction -> startGreenPhase(direction, elapsedSeconds));
     }
 
     private Map<Direction, Integer> countWaitingCars() {
@@ -76,8 +89,16 @@ public class LightController {
         }
     }
 
-    private void giveGreenLightTo(Direction direction) {
+    private void startGreenPhase(Direction direction, double elapsedSeconds) {
         lights.get(direction).setColor(LightColor.GREEN);
         lastServedDirection = direction;
+        phase = LightPhase.GREEN;
+        phaseStartedSeconds = elapsedSeconds;
+    }
+
+    private void startAllRedPhase(double elapsedSeconds) {
+        setAllLights(LightColor.RED);
+        phase = LightPhase.ALL_RED;
+        phaseStartedSeconds = elapsedSeconds;
     }
 }
