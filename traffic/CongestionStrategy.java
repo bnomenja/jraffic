@@ -18,7 +18,9 @@ public class CongestionStrategy implements TrafficControlStrategy {
             Map<Direction, Integer> waitingCars,
             Direction lastServedDirection
     ) {
+
         Objects.requireNonNull(waitingCars, "waitingCars cannot be null");
+
         Objects.requireNonNull(lastServedDirection, "lastServedDirection cannot be null");
 
         updateWaitingTurns(waitingCars);
@@ -40,10 +42,13 @@ public class CongestionStrategy implements TrafficControlStrategy {
         }
 
         return Optional.ofNullable(chosenDirection);
+
     }
 
     private void updateWaitingTurns(Map<Direction, Integer> waitingCars) {
+
         for (Direction direction : Direction.values()) {
+
             int carCount = waitingCars.getOrDefault(direction, 0);
 
             if (carCount > 0) {
@@ -51,16 +56,22 @@ public class CongestionStrategy implements TrafficControlStrategy {
             } else {
                 waitingTurns.put(direction, 0);
             }
+
         }
+
     }
 
     private Direction findLongestWaitingDirection(
             Map<Direction, Integer> waitingCars,
             Direction lastServedDirection
     ) {
+
         Direction[] directions = Direction.values();
+
         int lastIndex = lastServedDirection.ordinal();
+
         Direction longestWaitingDirection = null;
+
         int longestWait = MAX_WAITING_TURNS - 1;
 
         for (int offset = 1; offset <= directions.length; offset++) {
@@ -81,11 +92,12 @@ public class CongestionStrategy implements TrafficControlStrategy {
             Map<Direction, Integer> waitingCars,
             Direction lastServedDirection
     ) {
+
         Direction[] directions = Direction.values();
         int lastIndex = lastServedDirection.ordinal();
         Direction busiestDirection = null;
         int highestCarCount = 0;
-
+            
         for (int offset = 1; offset <= directions.length; offset++) {
             Direction candidate = directions[(lastIndex + offset) % directions.length];
             int carCount = waitingCars.getOrDefault(candidate, 0);
