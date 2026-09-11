@@ -2,11 +2,14 @@ package traffic;
 
 import model.Direction;
 
+// class responsibilty (store the state of one traffic light) .
 public class TrafficLight {
 
     private final Direction direction;
+
     private LightColor color;
 
+    // constructor create light
     public TrafficLight(Direction direction, LightColor initialColor) {
         this.direction = direction;
         this.color = initialColor;
