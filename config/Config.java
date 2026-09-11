@@ -1,0 +1,30 @@
+package config;
+
+import javafx.scene.paint.Color;
+
+public final class Config {
+
+    // --- Window ---
+    public static final int WINDOW_WIDTH = 800;
+    public static final int WINDOW_HEIGHT = 800;
+    public static final String WINDOW_TITLE = "Jraffic";
+    public static final boolean RESIZABLE = false;
+
+    // --- Road ---
+    public static final double ROAD_WIDTH = 50.0;
+    public static final Color BACKGROUND_COLOR = Color.FORESTGREEN;
+    public static final Color ROAD_COLOR = Color.rgb(45, 45, 45);
+    public static final Color LINE_COLOR = Color.WHITE;
+
+    // --- Traffic light ---
+    public static final Color LIGHT_COLOR = Color.DARKGRAY;
+    public static final double LIGHT_RADIUS_RATIO = 0.25; // radius = PAD * ratio
+    public static final double LIGHT_OFFSET_RATIO = 0.5;  // offset = PAD * ratio
+
+    // --- Car ---
+    public static final long SPAWN_COOLDOWN_MS = 450; // int millisecondes
+    public static final double CAR_SPEED = 95;
+    public static final double CAR_WIDTH = 16;   
+    public static final double CAR_LENGTH = 16; 
+
+}
