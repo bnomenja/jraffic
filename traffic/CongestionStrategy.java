@@ -6,12 +6,15 @@ import java.util.Objects;
 import java.util.Optional;
 import model.Direction;
 
-// Chooses the non-empty direction that has the most waiting cars.
 public class CongestionStrategy implements TrafficControlStrategy {
+
+    // SETTINGS AND MEMORY 
 
     private static final int MAX_WAITING_TURNS = 3;
 
     private final Map<Direction, Integer> waitingTurns = new EnumMap<>(Direction.class);
+
+    // CHOOSE NEXT DIRECTION 
 
     @Override
     public Optional<Direction> chooseNext(
@@ -45,11 +48,14 @@ public class CongestionStrategy implements TrafficControlStrategy {
 
     }
 
+    // WAITING TURN COUNTER 
+
     private void updateWaitingTurns(Map<Direction, Integer> waitingCars) {
 
         for (Direction direction : Direction.values()) {
 
             int carCount = waitingCars.getOrDefault(direction, 0);
+
 
             if (carCount > 0) {
                 waitingTurns.put(direction, waitingTurns.getOrDefault(direction, 0) + 1);
@@ -60,6 +66,8 @@ public class CongestionStrategy implements TrafficControlStrategy {
         }
 
     }
+
+    // LONGEST-WAITING ROAD 
 
     private Direction findLongestWaitingDirection(
             Map<Direction, Integer> waitingCars,
@@ -75,6 +83,7 @@ public class CongestionStrategy implements TrafficControlStrategy {
         int longestWait = MAX_WAITING_TURNS - 1;
 
         for (int offset = 1; offset <= directions.length; offset++) {
+
             Direction candidate = directions[(lastIndex + offset) % directions.length];
             int carCount = waitingCars.getOrDefault(candidate, 0);
             int wait = waitingTurns.getOrDefault(candidate, 0);
@@ -83,10 +92,13 @@ public class CongestionStrategy implements TrafficControlStrategy {
                 longestWaitingDirection = candidate;
                 longestWait = wait;
             }
+
         }
 
         return longestWaitingDirection;
     }
+
+    // BUSIEST ROAD 
 
     private Direction findBusiestDirection(
             Map<Direction, Integer> waitingCars,
@@ -97,15 +109,18 @@ public class CongestionStrategy implements TrafficControlStrategy {
         int lastIndex = lastServedDirection.ordinal();
         Direction busiestDirection = null;
         int highestCarCount = 0;
-            
+
         for (int offset = 1; offset <= directions.length; offset++) {
+
             Direction candidate = directions[(lastIndex + offset) % directions.length];
+
             int carCount = waitingCars.getOrDefault(candidate, 0);
 
             if (carCount > highestCarCount) {
                 busiestDirection = candidate;
                 highestCarCount = carCount;
             }
+
         }
 
         return busiestDirection;

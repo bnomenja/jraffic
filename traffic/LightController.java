@@ -10,6 +10,8 @@ import model.Lane;
 
 public class LightController {
 
+    // SETTINGS & STATES
+
     private static final double NORMAL_GREEN_DURATION_SECONDS = 2.0;
     private static final double FULL_LANE_GREEN_DURATION_SECONDS = 4.0;
     private static final double ALL_RED_DURATION_SECONDS = 0.5;
@@ -25,6 +27,8 @@ public class LightController {
     private Direction greenDirection;
     private double currentGreenDurationSeconds = NORMAL_GREEN_DURATION_SECONDS;
 
+    // SETUP
+
     public LightController(Map<Direction, Lane> lanes) {
         this(lanes, new CongestionStrategy());
     }
@@ -37,13 +41,17 @@ public class LightController {
         this.strategy = Objects.requireNonNull(strategy, "strategy cannot be null");
 
         for (Direction direction : Direction.values()) {
+
             Objects.requireNonNull(
                     lanes.get(direction),
                     "Missing incoming lane for " + direction
             );
+            
             lights.put(direction, new TrafficLight(direction, LightColor.RED));
         }
     }
+
+    // PUBLIC METHODS
 
     public LightColor getColor(Direction direction) {
         return lights.get(direction).getColor();
@@ -65,7 +73,10 @@ public class LightController {
         observers.remove(observer);
     }
 
+    // MAIN LIGHT FLOW
+
     public void update(double elapsedSeconds, boolean intersectionEmpty) {
+
         double phaseDuration = elapsedSeconds - phaseStartedSeconds;
 
         if (phase == LightPhase.GREEN) {
@@ -86,9 +97,13 @@ public class LightController {
 
         strategy.chooseNext(waitingCars, lastServedDirection)
                 .ifPresent(direction -> startGreenPhase(direction, elapsedSeconds));
+
     }
 
+    // INTERNAL HELPERS
+
     private Map<Direction, Integer> countWaitingCars() {
+
         Map<Direction, Integer> waitingCars = new EnumMap<>(Direction.class);
 
         for (Direction direction : Direction.values()) {
@@ -96,6 +111,7 @@ public class LightController {
         }
 
         return waitingCars;
+
     }
 
     private void setAllLights(LightColor color) {
@@ -104,8 +120,10 @@ public class LightController {
         }
     }
 
-    // include observer
+    // OBSERVER NOTIFICATION
+
     private void setLightColor(Direction direction, LightColor color) {
+
         TrafficLight light = lights.get(direction);
 
         if (light.getColor() == color) {
@@ -113,9 +131,8 @@ public class LightController {
         }
 
         light.setColor(color);
+        notifyObservers(direction, color);
 
-       // observer
-         notifyObservers(direction, color);
     }
 
     private void notifyObservers(Direction direction, LightColor color) {
@@ -124,10 +141,12 @@ public class LightController {
             observer.onLightChanged(direction, color);
         }
 
-
     }
 
+    // PHASE CHANGES
+
     private void startGreenPhase(Direction direction, double elapsedSeconds) {
+
         setLightColor(direction, LightColor.GREEN);
         lastServedDirection = direction;
         greenDirection = direction;
@@ -136,19 +155,24 @@ public class LightController {
                 : NORMAL_GREEN_DURATION_SECONDS;
         phase = LightPhase.GREEN;
         phaseStartedSeconds = elapsedSeconds;
+
     }
 
     private void extendGreenTimeIfLaneIsFull() {
+
         if (lanes.get(greenDirection).isFull()) {
             currentGreenDurationSeconds = FULL_LANE_GREEN_DURATION_SECONDS;
         }
+
     }
 
     private void startAllRedPhase(double elapsedSeconds) {
+
         setAllLights(LightColor.RED);
         greenDirection = null;
         currentGreenDurationSeconds = NORMAL_GREEN_DURATION_SECONDS;
         phase = LightPhase.ALL_RED;
         phaseStartedSeconds = elapsedSeconds;
+
     }
 }
