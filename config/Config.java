@@ -17,7 +17,7 @@ public final class Config {
     public static final Color LINE_COLOR = Color.WHITE;
 
     /** Distance from the junction centre to each incoming stop line. */
-    public static final double STOP_LINE_OFFSET = ROAD_WIDTH / 2.0;
+    public static final double STOP_LINE_OFFSET = ROAD_WIDTH;
 
     // --- Junction control ---
     public static final double MIN_GREEN_SECONDS = 1.5;

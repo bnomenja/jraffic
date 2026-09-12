@@ -42,8 +42,8 @@ public class RoadRenderer {
 
         drawLine(root, centerX - rw, centerY - offset, centerX, centerY - offset, color);
         drawLine(root, centerX, centerY + offset, centerX + rw, centerY + offset, color);
-        drawLine(root, centerX + offset, centerY, centerX + offset, centerY + rw, color);
-        drawLine(root, centerX - offset, centerY - rw, centerX - offset, centerY, color);
+        drawLine(root, centerX + offset, centerY, centerX + offset, centerY - rw, color);
+        drawLine(root, centerX - offset, centerY + rw, centerX - offset, centerY, color);
     }
 
     private static void drawLine(Pane root, double x1, double y1, double x2, double y2, Color color) {

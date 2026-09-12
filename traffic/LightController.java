@@ -49,7 +49,6 @@ public class LightController {
             
             lights.put(direction, new TrafficLight(direction, LightColor.RED));
         }
-        setActiveDirection(Direction.NORTH, 0.0);
     }
 
     // PUBLIC METHODS

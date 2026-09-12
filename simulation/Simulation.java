@@ -61,20 +61,19 @@ public class Simulation{
         timeOfLastFrame = nowSeconds;
     }
 
-    private void updateCars(double dt){
+    private void updateCars(double dt) {
         moveCars(dt);
-        intersection.transferCars();
+        intersection.transferCars(elapsedSeconds);
         removeExitedCars();
     }
-
-
+    
     private void moveCars(double dt) {
         for (Direction dir : Direction.values()) {
             boolean green = scheduler.getColor(dir) == LightColor.GREEN;
-            syncLane(inLanes.get(dir), dt, green && intersection.canAcceptEntry());
+            syncLane(inLanes.get(dir), dt, green && intersection.canAcceptEntry(dir, elapsedSeconds));
             syncLane(outLanes.get(dir), dt);
         }
-
+    
         for (Car c : intersection.getCarsInside()) {
             c.move(dt);
         }
