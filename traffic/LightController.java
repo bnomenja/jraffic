@@ -1,105 +1,179 @@
 package traffic;
 
-import config.Config;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import model.Direction;
 import model.Lane;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 public class LightController {
+
+    // SETTINGS & STATES
+
+    private static final double NORMAL_GREEN_DURATION_SECONDS = 2.0;
+    private static final double FULL_LANE_GREEN_DURATION_SECONDS = 4.0;
+    private static final double ALL_RED_DURATION_SECONDS = 0.5;
 
     private final Map<Direction, Lane> lanes;
     private final Map<Direction, TrafficLight> lights = new EnumMap<>(Direction.class);
+    private final List<LightObserver> observers = new ArrayList<>();
+    private final TrafficControlStrategy strategy;
 
-    private Direction activeDirection;
-    private double greenStartedSeconds = 0.0;
+    private LightPhase phase = LightPhase.ALL_RED;
+    private double phaseStartedSeconds = 0.0;
+    private Direction lastServedDirection = Direction.WEST;
+    private Direction greenDirection;
+    private double currentGreenDurationSeconds = NORMAL_GREEN_DURATION_SECONDS;
+
+    // SETUP
 
     public LightController(Map<Direction, Lane> lanes) {
-        this.lanes = lanes;
+        this(lanes, new CongestionStrategy());
+    }
 
-        for (Direction d : Direction.values()) {
-            lights.put(d, new TrafficLight(d, LightColor.RED));
+    public LightController(
+            Map<Direction, Lane> lanes,
+            TrafficControlStrategy strategy
+    ) {
+        this.lanes = Objects.requireNonNull(lanes, "lanes cannot be null");
+        this.strategy = Objects.requireNonNull(strategy, "strategy cannot be null");
+
+        for (Direction direction : Direction.values()) {
+
+            Objects.requireNonNull(
+                    lanes.get(direction),
+                    "Missing incoming lane for " + direction
+            );
+            
+            lights.put(direction, new TrafficLight(direction, LightColor.RED));
         }
         setActiveDirection(Direction.NORTH, 0.0);
     }
+
+    // PUBLIC METHODS
 
     public LightColor getColor(Direction direction) {
         return lights.get(direction).getColor();
     }
 
-    /**
-     * Keeps exactly one approach green. A phase is never changed while a car
-     * occupies the junction, so two conflicting routes cannot be admitted.
-     * Once clear, the most congested waiting lane has priority.
-     */
-    public void update(double elapsedSeconds, boolean intersectionEmpty) {
-        double greenAge = elapsedSeconds - greenStartedSeconds;
-        if (greenAge < Config.MIN_GREEN_SECONDS || !intersectionEmpty) {
-            return;
-        }
-
-        Direction candidate = mostCongestedDirection(greenAge >= Config.MAX_GREEN_SECONDS);
-        if (candidate == activeDirection || lanes.get(candidate).getCars().isEmpty()) {
-            return;
-        }
-
-        Lane activeLane = lanes.get(activeDirection);
-        boolean activeIsEmpty = activeLane.getCars().isEmpty();
-        boolean candidateIsMoreCongested = lanes.get(candidate).getCongestionRatio()
-                > activeLane.getCongestionRatio();
-
-        // Keep serving the current approach briefly, but let a more crowded
-        // lane pre-empt it and force rotation after the maximum green time.
-        if (activeIsEmpty || candidateIsMoreCongested
-                || greenAge >= Config.MAX_GREEN_SECONDS) {
-            setActiveDirection(candidate, elapsedSeconds);
-        }
+    public boolean isGreen(Direction direction) {
+        return lights.get(direction).isGreen();
     }
 
-    private Direction mostCongestedDirection(boolean requireAnotherWaitingLane) {
-        Direction best = activeDirection;
-        double bestRatio = -1.0;
-        int bestQueue = -1;
-        boolean foundWaitingLane = false;
+    public LightPhase getPhase() {
+        return phase;
+    }
+
+    public void addObserver(LightObserver observer) {
+        observers.add(Objects.requireNonNull(observer, "observer cannot be null"));
+    }
+
+    public void removeObserver(LightObserver observer) {
+        observers.remove(observer);
+    }
+
+    // MAIN LIGHT FLOW
+
+    public void update(double elapsedSeconds, boolean intersectionEmpty) {
+
+        double phaseDuration = elapsedSeconds - phaseStartedSeconds;
+
+        if (phase == LightPhase.GREEN) {
+            extendGreenTimeIfLaneIsFull();
+
+            if (phaseDuration >= currentGreenDurationSeconds) {
+                startAllRedPhase(elapsedSeconds);
+            }
+
+            return;
+        }
+
+        if (phaseDuration < ALL_RED_DURATION_SECONDS || !intersectionEmpty) {
+            return;
+        }
+
+        Map<Direction, Integer> waitingCars = countWaitingCars();
+
+        strategy.chooseNext(waitingCars, lastServedDirection)
+                .ifPresent(direction -> startGreenPhase(direction, elapsedSeconds));
+
+    }
+
+    // INTERNAL HELPERS
+
+    private Map<Direction, Integer> countWaitingCars() {
+
+        Map<Direction, Integer> waitingCars = new EnumMap<>(Direction.class);
 
         for (Direction direction : Direction.values()) {
-            Lane lane = lanes.get(direction);
-            if (requireAnotherWaitingLane && direction == activeDirection) {
-                continue;
-            }
-            double ratio = lane.getCongestionRatio();
-            int queue = lane.getCars().size();
-            if (direction != activeDirection && queue > 0) {
-                foundWaitingLane = true;
-            }
-            if (ratio > bestRatio || (ratio == bestRatio && queue > bestQueue)
-                    || (ratio == bestRatio && queue == bestQueue
-                    && isEarlierAfterActive(direction, best))) {
-                best = direction;
-                bestRatio = ratio;
-                bestQueue = queue;
-            }
+            waitingCars.put(direction, lanes.get(direction).getCars().size());
         }
-        return requireAnotherWaitingLane && !foundWaitingLane ? activeDirection : best;
+
+        return waitingCars;
+
     }
 
-    private boolean isEarlierAfterActive(Direction candidate, Direction currentBest) {
-        int size = Direction.values().length;
-        int candidateDistance = Math.floorMod(candidate.ordinal() - activeDirection.ordinal(), size);
-        int bestDistance = Math.floorMod(currentBest.ordinal() - activeDirection.ordinal(), size);
-        // Treat the active direction as last in a tie, enabling round-robin.
-        if (candidateDistance == 0) candidateDistance = size;
-        if (bestDistance == 0) bestDistance = size;
-        return candidateDistance < bestDistance;
+    private void setAllLights(LightColor color) {
+        for (Direction direction : Direction.values()) {
+            setLightColor(direction, color);
+        }
     }
 
-    private void setActiveDirection(Direction direction, double elapsedSeconds) {
-        activeDirection = direction;
-        greenStartedSeconds = elapsedSeconds;
-        for (Direction lightDirection : Direction.values()) {
-            lights.get(lightDirection).setColor(lightDirection == direction
-                    ? LightColor.GREEN : LightColor.RED);
+    // OBSERVER NOTIFICATION
+
+    private void setLightColor(Direction direction, LightColor color) {
+
+        TrafficLight light = lights.get(direction);
+
+        if (light.getColor() == color) {
+            return;
         }
+
+        light.setColor(color);
+        notifyObservers(direction, color);
+
+    }
+
+    private void notifyObservers(Direction direction, LightColor color) {
+
+        for (LightObserver observer : List.copyOf(observers)) {
+            observer.onLightChanged(direction, color);
+        }
+
+    }
+
+    // PHASE CHANGES
+
+    private void startGreenPhase(Direction direction, double elapsedSeconds) {
+
+        setLightColor(direction, LightColor.GREEN);
+        lastServedDirection = direction;
+        greenDirection = direction;
+        currentGreenDurationSeconds = lanes.get(direction).isFull()
+                ? FULL_LANE_GREEN_DURATION_SECONDS
+                : NORMAL_GREEN_DURATION_SECONDS;
+        phase = LightPhase.GREEN;
+        phaseStartedSeconds = elapsedSeconds;
+
+    }
+
+    private void extendGreenTimeIfLaneIsFull() {
+
+        if (lanes.get(greenDirection).isFull()) {
+            currentGreenDurationSeconds = FULL_LANE_GREEN_DURATION_SECONDS;
+        }
+
+    }
+
+    private void startAllRedPhase(double elapsedSeconds) {
+
+        setAllLights(LightColor.RED);
+        greenDirection = null;
+        currentGreenDurationSeconds = NORMAL_GREEN_DURATION_SECONDS;
+        phase = LightPhase.ALL_RED;
+        phaseStartedSeconds = elapsedSeconds;
+
     }
 }
