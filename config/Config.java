@@ -26,5 +26,7 @@ public final class Config {
     public static final double CAR_SPEED = 95;
     public static final double CAR_WIDTH = 16;   
     public static final double CAR_LENGTH = 16; 
+    /** Empty space kept between the ends of consecutive cars in one lane. */
+    public static final double SAFETY_GAP = 10;
 
 }

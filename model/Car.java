@@ -129,6 +129,16 @@ public class Car {
     }
 
     public void move(double dt) {
+        move(dt, Double.POSITIVE_INFINITY);
+    }
+
+    /**
+     * Moves this car for at most {@code maxDistance} pixels.  A lane uses
+     * this overload to keep a following car from reaching the car ahead.
+     */
+    public void move(double dt, double maxDistance) {
+        double distance = Math.min(maxSpeed * dt, Math.max(0, maxDistance));
+
         if (!turned && reachedTurnPoint()) {
             x = turnPoint[0];
             y = turnPoint[1];
@@ -138,7 +148,7 @@ public class Car {
         Direction activeDirection = turned ? exitDirection : origin;
         double[] v = vectorFor(activeDirection);
 
-        x += v[0] * maxSpeed * dt;
-        y += v[1] * maxSpeed * dt;
+        x += v[0] * distance;
+        y += v[1] * distance;
     }
 }

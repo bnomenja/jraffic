@@ -2,7 +2,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 
 import render.SimulationRenderer;
-import render.AnimationLoop;;
+import render.AnimationLoop;
 import simulation.Simulation;
 import input.KeyPressedHandler;
 import config.Config;

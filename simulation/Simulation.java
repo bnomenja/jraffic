@@ -79,9 +79,7 @@ public class Simulation{
     }
 
     private void syncLane(Lane lane, double dt) {
-        for (Car c : lane.getCars()) {
-            c.move(dt);
-        }
+        lane.moveCars(dt);
     }
 
 

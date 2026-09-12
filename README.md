@@ -69,10 +69,10 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
     `null` for a `STRAIGHT` trip (no axis change needed).
   - `move(dt)`: advances the car; if it has reached its `turnPoint`, it
     switches to the axis of its `exitDirection`.
-  - **No notion of lights or collisions**: a car, once created, always moves
-    forward, at constant speed, in a straight line until it exits the
-    screen. This is intentional at this stage — it's precisely the
-    remaining work.
+- **Same-lane safety distance**: `Lane.moveCars` advances vehicles from
+  front to back and prevents a following vehicle from getting closer than
+  `CAR_LENGTH + SAFETY_GAP`. Light and intersection collision logic remain
+  to be implemented.
 
 ### 2.2 `simulation` — the orchestration
 
@@ -102,7 +102,7 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 - **`Simulation`**: holds the `EnumMap<Direction, Lane>` `inLanes`/
   `outLanes`, the `CarSpawner`, the `LightController`, and the
   `Intersection`. `update(now)` computes the elapsed `dt` then:
-  1. moves every car (`inLanes`, `Intersection.carsInside`, `outLanes`) via
+  1. moves lane cars with same-lane clearance and intersection cars via
      `Car.move(dt)`,
   2. applies the lane transfers (`Intersection.transferCars()`),
   3. removes from `outLanes` any car that has exited the field (outside the
@@ -135,8 +135,8 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 - **`KeyPressedHandler`**: translates the arrow keys and `r`/`Esc` into
   calls to `CarSpawner`.
 - **`Config`**: all the constants (window, road, lights, cooldown, speed).
-  **No safety/collision/capacity constants exist yet**
-  (`vehicle_length`, `safety_gap`, `lane_length`...) — to be added.
+  `CAR_LENGTH` and `SAFETY_GAP` define the same-lane clearance. Capacity
+  constants and collision-related values remain to be added.
 
 ---
 
@@ -150,7 +150,7 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 | Vehicle color based on route                                 | ✅ done (`CarRenderer.colorForTurn`)      |
 | Fixed velocity per vehicle                                   | ✅ done (`Config.CAR_SPEED`)              |
 | 2-color lights, positioned at the entry of each lane          | ✅ display done, ⚠️ dummy logic (random)  |
-| **Safety distance between vehicles in the same lane**        | ❌ not done                               |
+| **Safety distance between vehicles in the same lane**        | ✅ done (`Lane.moveCars`)                 |
 | **Stop line + real stopping at a red light**                 | ❌ not done                               |
 | **No collisions inside the intersection**                    | ❌ not done (geometric transfer only, no conflict check) |
 | **Lights avoiding collisions + adapting to congestion**      | ❌ not done (currently random, no link to lanes) |
