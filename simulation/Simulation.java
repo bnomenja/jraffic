@@ -69,7 +69,7 @@ public class Simulation{
 
     private void moveCars(double dt) {
         for (Direction dir : Direction.values()) {
-            syncLane(inLanes.get(dir), dt);
+            syncLane(inLanes.get(dir), dt, scheduler.getColor(dir) == LightColor.GREEN);
             syncLane(outLanes.get(dir), dt);
         }
 
@@ -80,6 +80,10 @@ public class Simulation{
 
     private void syncLane(Lane lane, double dt) {
         lane.moveCars(dt);
+    }
+
+    private void syncLane(Lane lane, double dt, boolean mayEnterIntersection) {
+        lane.moveCars(dt, mayEnterIntersection);
     }
 
 

@@ -16,6 +16,9 @@ public final class Config {
     public static final Color ROAD_COLOR = Color.rgb(45, 45, 45);
     public static final Color LINE_COLOR = Color.WHITE;
 
+    /** Distance from the junction centre to each incoming stop line. */
+    public static final double STOP_LINE_OFFSET = ROAD_WIDTH / 2.0;
+
     // --- Traffic light ---
     public static final Color LIGHT_COLOR = Color.DARKGRAY;
     public static final double LIGHT_RADIUS_RATIO = 0.25; // radius = PAD * ratio

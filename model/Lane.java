@@ -33,13 +33,28 @@ public class Lane{
      * receives cars from the intersection.
      */
     public void moveCars(double dt) {
+        moveCars(dt, true);
+    }
+
+    /**
+     * Moves an incoming lane while respecting its stop line. When entry is
+     * not allowed, the lead car stops before the line and the following cars
+     * remain separated by the normal safe distance.
+     */
+    public void moveCars(double dt, boolean mayEnterIntersection) {
         cars.sort(Comparator.comparingDouble(this::progress).reversed());
 
         double minimumSpacing = Config.CAR_LENGTH + Config.SAFETY_GAP;
         Car carAhead = null;
         for (Car car : cars) {
             if (carAhead == null) {
-                car.move(dt);
+                double maxDistance = Double.POSITIVE_INFINITY;
+                if (!mayEnterIntersection) {
+                    // Car positions are their centres, so preserve a
+                    // half-length margin before the painted stop line.
+                    maxDistance = stopProgress() - Config.CAR_LENGTH / 2.0 - progress(car);
+                }
+                car.move(dt, maxDistance);
             } else {
                 double availableDistance = progress(carAhead) - minimumSpacing - progress(car);
                 car.move(dt, availableDistance);
@@ -55,6 +70,19 @@ public class Lane{
             case SOUTH -> -car.getY();
             case EAST -> -car.getX();
             case WEST -> car.getX();
+        };
+    }
+
+    private double stopProgress() {
+        double centerX = Config.WINDOW_WIDTH / 2.0;
+        double centerY = Config.WINDOW_HEIGHT / 2.0;
+        double offset = Config.STOP_LINE_OFFSET;
+
+        return switch (dir) {
+            case NORTH -> centerY - offset;
+            case SOUTH -> -(centerY + offset);
+            case EAST -> -(centerX + offset);
+            case WEST -> centerX - offset;
         };
     }
 }

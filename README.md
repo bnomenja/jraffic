@@ -71,8 +71,9 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
     switches to the axis of its `exitDirection`.
 - **Same-lane safety distance**: `Lane.moveCars` advances vehicles from
   front to back and prevents a following vehicle from getting closer than
-  `CAR_LENGTH + SAFETY_GAP`. Light and intersection collision logic remain
-  to be implemented.
+  `CAR_LENGTH + SAFETY_GAP`. For incoming lanes, the lead car is also capped
+  before the stop line whenever its signal is red; queued cars inherit that
+  stop through the same safety-distance rule.
 
 ### 2.2 `simulation` — the orchestration
 
@@ -120,7 +121,7 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 
 ### 2.4 `render` — the display (JavaFX)
 
-- **`RoadRenderer`**: draws the roads and the central square (static).
+- **`RoadRenderer`**: draws the roads, central square, and four stop lines.
 - **`LightsRenderer`**: one circle per direction, colored according to
   `LightController.getColor(dir)`. Computed positions, no assets.
 - **`CarRenderer`**: syncs one JavaFX `Rectangle` per `Car` (created/moved/
@@ -151,7 +152,7 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 | Fixed velocity per vehicle                                   | ✅ done (`Config.CAR_SPEED`)              |
 | 2-color lights, positioned at the entry of each lane          | ✅ display done, ⚠️ dummy logic (random)  |
 | **Safety distance between vehicles in the same lane**        | ✅ done (`Lane.moveCars`)                 |
-| **Stop line + real stopping at a red light**                 | ❌ not done                               |
+| **Stop line + real stopping at a red light**                 | ✅ done (`Lane`, `Simulation`, `RoadRenderer`) |
 | **No collisions inside the intersection**                    | ❌ not done (geometric transfer only, no conflict check) |
 | **Lights avoiding collisions + adapting to congestion**      | ❌ not done (currently random, no link to lanes) |
 | **Dynamic capacity formula `capacity = floor(lane_length/(vehicle_length+safety_gap))`** | ❌ not done (`Lane.isFull()` always returns `false`) |

@@ -19,7 +19,7 @@ public class Intersection {
 
     private final double centerX = Config.WINDOW_WIDTH / 2.0;
     private final double centerY = Config.WINDOW_HEIGHT / 2.0;
-    private final double halfSize = Config.ROAD_WIDTH / 2.0;
+    private final double stopLineOffset = Config.STOP_LINE_OFFSET;
 
     public Intersection(EnumMap<Direction, Lane> inLanes, EnumMap<Direction, Lane> outLanes) {
         this.inLanes = inLanes;
@@ -64,19 +64,19 @@ public class Intersection {
 
     private boolean hasLeftInLane(Car car) {
         return switch (car.getOrigin()) {
-            case NORTH -> car.getY() >= centerY - halfSize;
-            case SOUTH -> car.getY() <= centerY + halfSize;
-            case EAST  -> car.getX() <= centerX + halfSize;
-            case WEST  -> car.getX() >= centerX - halfSize;
+            case NORTH -> car.getY() >= centerY - stopLineOffset;
+            case SOUTH -> car.getY() <= centerY + stopLineOffset;
+            case EAST  -> car.getX() <= centerX + stopLineOffset;
+            case WEST  -> car.getX() >= centerX - stopLineOffset;
         };
     }
 
     private boolean isReoriented(Car car) {
         return switch (car.getExitDirection()) {
-            case NORTH -> car.getY() >= centerY + halfSize;
-            case SOUTH -> car.getY() <= centerY - halfSize;
-            case EAST  -> car.getX() <= centerX - halfSize;
-            case WEST  -> car.getX() >= centerX + halfSize;
+            case NORTH -> car.getY() >= centerY + stopLineOffset;
+            case SOUTH -> car.getY() <= centerY - stopLineOffset;
+            case EAST  -> car.getX() <= centerX - stopLineOffset;
+            case WEST  -> car.getX() >= centerX - stopLineOffset;
         };
     }
 }

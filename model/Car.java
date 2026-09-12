@@ -138,6 +138,7 @@ public class Car {
      */
     public void move(double dt, double maxDistance) {
         double distance = Math.min(maxSpeed * dt, Math.max(0, maxDistance));
+        moving = distance > 0;
 
         if (!turned && reachedTurnPoint()) {
             x = turnPoint[0];

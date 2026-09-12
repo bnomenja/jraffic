@@ -31,6 +31,19 @@ public class RoadRenderer {
         drawLine(root, ww / 2.0, 0, ww / 2.0, wh, lineColor);
 
         drawRectangle(root, ww / 2.0 - rw, wh / 2.0 - rw, 2 * rw, 2 * rw, roadColor);
+        // Draw these last so the central junction surface cannot hide them.
+        drawStopLines(root, ww, wh, rw, lineColor);
+    }
+
+    private static void drawStopLines(Pane root, double ww, double wh, double rw, Color color) {
+        double centerX = ww / 2.0;
+        double centerY = wh / 2.0;
+        double offset = Config.STOP_LINE_OFFSET;
+
+        drawLine(root, centerX - rw, centerY - offset, centerX, centerY - offset, color);
+        drawLine(root, centerX, centerY + offset, centerX + rw, centerY + offset, color);
+        drawLine(root, centerX + offset, centerY, centerX + offset, centerY + rw, color);
+        drawLine(root, centerX - offset, centerY - rw, centerX - offset, centerY, color);
     }
 
     private static void drawLine(Pane root, double x1, double y1, double x2, double y2, Color color) {
