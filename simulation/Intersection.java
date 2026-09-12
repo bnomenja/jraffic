@@ -30,6 +30,14 @@ public class Intersection {
         return carsInside;
     }
 
+    /**
+     * The junction is intentionally single-occupancy: any turn combination
+     * is safe because a second route cannot enter until the first has left.
+     */
+    public boolean canAcceptEntry() {
+        return carsInside.isEmpty();
+    }
+
     public void transferCars() {
         collectFromInLanes();
         dispatchToOutLanes();
@@ -42,7 +50,7 @@ public class Intersection {
 
             while (it.hasNext()) {
                 Car car = it.next();
-                if (hasLeftInLane(car)) {
+                if (canAcceptEntry() && hasLeftInLane(car)) {
                     it.remove();
                     carsInside.add(car);
                 }

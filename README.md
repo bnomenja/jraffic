@@ -58,8 +58,9 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 - **`Turn`** (`STRAIGHT, LEFT, RIGHT`): converts an origin direction into an
   exit direction via `exitDirection(origin)`.
 
-- **`Lane`**: a simple container of `Car` (`List<Car>`). `isFull()` always
-  returns `false` for now — **this is a point to implement** (see §3).
+- **`Lane`**: a container of `Car` (`List<Car>`). `isFull()` uses the
+  physical lane capacity calculated from its spawn-to-stop-line length,
+  vehicle length, and safety gap.
 
 - **`Car`**: position `(x, y)`, fixed speed (`Config.CAR_SPEED`), and all the
   movement geometry:
@@ -82,9 +83,10 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
   (`Config.SPAWN_COOLDOWN_MS`) prevents keyboard spam — but this is **not**
   a real safety-distance concept (see §3).
 
-- **`Intersection`** *(new)*: handles only the **geometric transfer** of
-  cars between lanes, with no collision or light logic. A car belongs to
-  only one collection at a time:
+- **`Intersection`** *(new)*: handles the geometric transfer of cars between
+  lanes. It admits only one car at a time, so arbitrary straight/left/right
+  trajectories cannot collide. A car belongs to only one collection at a
+  time:
 
   ```
   inLanes[origin]  --(hasLeftInLane)-->  Intersection.carsInside  --(isReoriented)-->  outLanes[exitDirection]
@@ -110,14 +112,13 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
      window bounds) — **this is the final removal of vehicles**, there's
      nowhere else they disappear.
 
-### 2.3 `traffic` — the lights (minimal state, no real logic yet)
+### 2.3 `traffic` — the lights
 
 - **`LightColor`** (`RED, GREEN`).
 - **`TrafficLight`**: one color per `Direction`.
-- **`LightController`**: at this stage, **randomly** changes each light's
-  color every `CHANGE_INTERVAL_SECONDS` (2s), independently of each other
-  and independently of any real traffic. No link to `Lane`, no notion of
-  capacity. **This is a stub to be replaced** (§3).
+- **`LightController`**: keeps exactly one incoming direction green. It
+  chooses the most congested lane when the junction is clear, with minimum
+  and maximum green durations to balance throughput and fairness.
 
 ### 2.4 `render` — the display (JavaFX)
 
@@ -136,8 +137,8 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 - **`KeyPressedHandler`**: translates the arrow keys and `r`/`Esc` into
   calls to `CarSpawner`.
 - **`Config`**: all the constants (window, road, lights, cooldown, speed).
-  `CAR_LENGTH` and `SAFETY_GAP` define the same-lane clearance. Capacity
-  constants and collision-related values remain to be added.
+  `CAR_LENGTH` and `SAFETY_GAP` define the same-lane clearance and are used
+  with the spawn-to-stop-line distance to calculate each lane's capacity.
 
 ---
 
@@ -150,12 +151,12 @@ AnimationLoop (60 fps) --> simulation.update(now) then renderer.render()
 | Keyboard spawn (arrows, `r`, `Esc`), anti-spam               | ✅ done (`KeyPressedHandler`, *time-based* cooldown) |
 | Vehicle color based on route                                 | ✅ done (`CarRenderer.colorForTurn`)      |
 | Fixed velocity per vehicle                                   | ✅ done (`Config.CAR_SPEED`)              |
-| 2-color lights, positioned at the entry of each lane          | ✅ display done, ⚠️ dummy logic (random)  |
+| 2-color lights, positioned at the entry of each lane          | ✅ done (exclusive, congestion-aware phases) |
 | **Safety distance between vehicles in the same lane**        | ✅ done (`Lane.moveCars`)                 |
 | **Stop line + real stopping at a red light**                 | ✅ done (`Lane`, `Simulation`, `RoadRenderer`) |
-| **No collisions inside the intersection**                    | ❌ not done (geometric transfer only, no conflict check) |
-| **Lights avoiding collisions + adapting to congestion**      | ❌ not done (currently random, no link to lanes) |
-| **Dynamic capacity formula `capacity = floor(lane_length/(vehicle_length+safety_gap))`** | ❌ not done (`Lane.isFull()` always returns `false`) |
+| **No collisions inside the intersection**                    | ✅ done (single-vehicle junction admission) |
+| **Lights avoiding collisions + adapting to congestion**      | ✅ done (`LightController` queues by congestion) |
+| **Dynamic capacity formula `capacity = floor(lane_length/(vehicle_length+safety_gap))`** | ✅ done (`Lane.getCapacity()`) |
 | Polished UI / animations / assets (bonus)                    | ❌ not done (raw rectangles + circles)    |
 
 In short: **the skeleton (movement, lane transfer, spawning, basic

@@ -52,10 +52,11 @@ public class Simulation{
 
     public void update(long now){
         double nowSeconds = now / 1_000_000_000.0;
-        double dt = nowSeconds - timeOfLastFrame;
+        // Avoid a long UI pause letting a car jump through the stop line.
+        double dt = Math.min(nowSeconds - timeOfLastFrame, 0.05);
         elapsedSeconds += dt;
 
-        scheduler.update(elapsedSeconds);
+        scheduler.update(elapsedSeconds, intersection.canAcceptEntry());
         updateCars(dt);
         timeOfLastFrame = nowSeconds;
     }
@@ -69,7 +70,8 @@ public class Simulation{
 
     private void moveCars(double dt) {
         for (Direction dir : Direction.values()) {
-            syncLane(inLanes.get(dir), dt, scheduler.getColor(dir) == LightColor.GREEN);
+            boolean green = scheduler.getColor(dir) == LightColor.GREEN;
+            syncLane(inLanes.get(dir), dt, green && intersection.canAcceptEntry());
             syncLane(outLanes.get(dir), dt);
         }
 

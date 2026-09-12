@@ -19,6 +19,10 @@ public final class Config {
     /** Distance from the junction centre to each incoming stop line. */
     public static final double STOP_LINE_OFFSET = ROAD_WIDTH / 2.0;
 
+    // --- Junction control ---
+    public static final double MIN_GREEN_SECONDS = 1.5;
+    public static final double MAX_GREEN_SECONDS = 5.0;
+
     // --- Traffic light ---
     public static final Color LIGHT_COLOR = Color.DARKGRAY;
     public static final double LIGHT_RADIUS_RATIO = 0.25; // radius = PAD * ratio

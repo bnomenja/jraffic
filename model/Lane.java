@@ -15,7 +15,20 @@ public class Lane{
     }
 
     public boolean isFull(){
-        return false;
+        return cars.size() >= getCapacity();
+    }
+
+    /**
+     * Maximum number of cars that fit between the spawn point and stop line.
+     * Each car consumes its length plus the required safety gap.
+     */
+    public int getCapacity() {
+        return (int) Math.floor(getLengthToStopLine() /
+                (Config.CAR_LENGTH + Config.SAFETY_GAP));
+    }
+
+    public double getCongestionRatio() {
+        return cars.size() / (double) getCapacity();
     }
 
     public List<Car> getCars(){
@@ -83,6 +96,13 @@ public class Lane{
             case SOUTH -> -(centerY + offset);
             case EAST -> -(centerX + offset);
             case WEST -> centerX - offset;
+        };
+    }
+
+    private double getLengthToStopLine() {
+        return switch (dir) {
+            case NORTH, SOUTH -> Config.WINDOW_HEIGHT / 2.0 - Config.STOP_LINE_OFFSET;
+            case EAST, WEST -> Config.WINDOW_WIDTH / 2.0 - Config.STOP_LINE_OFFSET;
         };
     }
 }
