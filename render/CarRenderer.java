@@ -1,13 +1,14 @@
 package render;
 
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.EnumMap;
+import java.io.File;
 
 import simulation.Simulation;
 import model.*;
@@ -16,7 +17,7 @@ import config.Config;
 public class CarRenderer {
     private final Simulation manager;
     private final Pane root;
-    private final HashMap<Integer, Rectangle> cars;
+    private final HashMap<Integer, ImageView> cars;
 
     public CarRenderer(Pane root, Simulation manager){
         this.manager = manager;
@@ -48,16 +49,26 @@ public class CarRenderer {
         for (Car c : carsToSync) {
             seenIds.add(c.getId());
 
-            Rectangle rect = cars.get(c.getId());
-            if (rect == null) {
-                rect = createCarShape(c);
-                cars.put(c.getId(), rect);
-                root.getChildren().add(rect);
+            ImageView view = cars.get(c.getId());
+            if (view == null) {
+                view = createCarShape(c);
+                cars.put(c.getId(), view);
+                root.getChildren().add(view);
             }
 
-            rect.setX(c.getX() - rect.getWidth() / 2.0);
-            rect.setY(c.getY() - rect.getHeight() / 2.0);
+            view.setX(c.getX() - view.getFitWidth() / 2.0);
+            view.setY(c.getY() - view.getFitHeight() / 2.0);
+            view.setRotate(getAngleRotation(c.getCurrentDir()));
         }
+    }
+
+    private double getAngleRotation(Direction d){
+        return switch (d) {
+            case SOUTH -> 0;
+            case WEST  -> 90;
+            case NORTH -> 180;
+            case EAST  -> 270;
+        };
     }
 
     private void removeMissingCars(Set<Integer> seenIds) {
@@ -71,26 +82,26 @@ public class CarRenderer {
         });
     }
 
-    private Rectangle createCarShape(Car c) {
-        boolean vertical = isVertical(c.getOrigin());
+    private ImageView createCarShape(Car c) {
+        double w = Config.CAR_WIDTH;
+        double h = Config.CAR_LENGTH;
 
-        double w = vertical ? Config.CAR_WIDTH : Config.CAR_LENGTH;
-        double h = vertical ? Config.CAR_LENGTH : Config.CAR_WIDTH;
+        Image img = new Image(new File("assets/" + colorForTurn(c.getTurn())).toURI().toString());
 
-        Rectangle rect = new Rectangle(w, h);
-        rect.setFill(colorForTurn(c.getTurn()));
-        return rect;
+        ImageView view = new ImageView(img);
+        view.setFitWidth(w);
+        view.setFitHeight(h);
+        view.setPreserveRatio(false); 
+        view.setSmooth(true);
+
+        return view;
     }
 
-    private boolean isVertical(Direction origin) {
-        return origin == Direction.NORTH || origin == Direction.SOUTH;
-    }
-
-    private Color colorForTurn(Turn turn) {
+    private String colorForTurn(Turn turn) {
         return switch (turn) {
-            case STRAIGHT -> Color.DODGERBLUE;
-            case LEFT     -> Color.ORANGE;
-            case RIGHT    -> Color.LIMEGREEN;
+            case STRAIGHT -> "green_car.png";
+            case LEFT     -> "red_car.png";
+            case RIGHT    -> "yellow_car.png";
         };
     }
 }

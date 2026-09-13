@@ -12,7 +12,7 @@ public final class Config {
 
     // --- Road ---
     public static final double ROAD_WIDTH = 50.0;
-    public static final Color BACKGROUND_COLOR = Color.FORESTGREEN;
+    public static final Color BACKGROUND_COLOR = Color.web("#1A1D23"); 
     public static final Color ROAD_COLOR = Color.rgb(45, 45, 45);
     public static final Color LINE_COLOR = Color.WHITE;
 

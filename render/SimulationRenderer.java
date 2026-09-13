@@ -9,11 +9,11 @@ import config.Config;
 public class SimulationRenderer {
     private final Simulation manager;
     private final LightsRenderer lights;
-    private  final CarRenderer cars;
-
+    private final CarRenderer cars;
 
     private final Pane root = new Pane();
     private final Scene scene;
+    private final TimeRenderer timer;
 
     public SimulationRenderer(Simulation manager){
         this.scene = new Scene(root, 
@@ -29,6 +29,8 @@ public class SimulationRenderer {
 
         RoadRenderer.draw(root);
         lights.init();
+        
+        this.timer = new TimeRenderer(root, manager);
     }
 
     public Scene getScene(){
@@ -39,5 +41,6 @@ public class SimulationRenderer {
     public void render(){
         lights.update();
         cars.update();
+        timer.update();
     }
 }

@@ -19,6 +19,8 @@ public class Car {
     private final double[] turnPoint;
     private boolean turned = false;
 
+    private Direction currentDir;
+
     public Car(Direction origin, Turn turn, Direction exitDirection) {
         this.id = nextId++;
         this.origin = origin;
@@ -30,6 +32,8 @@ public class Car {
         this.y = spawnPoint[1];
 
         this.turnPoint = (turn == Turn.STRAIGHT) ? null : computeTurnPoint(origin, exitDirection);
+
+        this.currentDir = origin;
     }
 
     private double[] computeSpawnPoint(Direction origin) {
@@ -128,6 +132,14 @@ public class Car {
         return y;
     }
 
+    public Direction getCurrentDir(){
+        return this.currentDir;
+    }
+
+    private void ChangeCurrentDir(){
+        this.currentDir = exitDirection;
+    }
+
     public void move(double dt) {
         move(dt, Double.POSITIVE_INFINITY);
     }
@@ -139,6 +151,7 @@ public class Car {
         if (!turned && reachedTurnPoint()) {
             x = turnPoint[0];
             y = turnPoint[1];
+            ChangeCurrentDir();
             turned = true;
         }
 

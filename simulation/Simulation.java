@@ -50,6 +50,10 @@ public class Simulation{
         return this.intersection;
     }
 
+    public double getElapsedSeconds() {
+        return this.elapsedSeconds;
+    }
+
     public void update(long now){
         double nowSeconds = now / 1_000_000_000.0;
         double dt = nowSeconds - timeOfLastFrame;
