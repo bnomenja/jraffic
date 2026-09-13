@@ -52,8 +52,7 @@ public class Simulation{
 
     public void update(long now){
         double nowSeconds = now / 1_000_000_000.0;
-        // Avoid a long UI pause letting a car jump through the stop line.
-        double dt = Math.min(nowSeconds - timeOfLastFrame, 0.05);
+        double dt = nowSeconds - timeOfLastFrame;
         elapsedSeconds += dt;
 
         scheduler.update(elapsedSeconds, intersection.getCarsInside().isEmpty());
@@ -69,24 +68,18 @@ public class Simulation{
     
     private void moveCars(double dt) {
         for (Direction dir : Direction.values()) {
-            boolean green = scheduler.getColor(dir) == LightColor.GREEN;
-            syncLane(inLanes.get(dir), dt, green && intersection.canAcceptEntry(dir, elapsedSeconds));
-            syncLane(outLanes.get(dir), dt);
+            boolean isGreen = scheduler.getColor(dir) == LightColor.GREEN;
+            Lane in =  inLanes.get(dir);
+            Lane out = outLanes.get(dir);
+
+            in.moveCars(dt, isGreen);
+            out.moveCars(dt);
         }
     
         for (Car c : intersection.getCarsInside()) {
             c.move(dt);
         }
     }
-
-    private void syncLane(Lane lane, double dt) {
-        lane.moveCars(dt);
-    }
-
-    private void syncLane(Lane lane, double dt, boolean mayEnterIntersection) {
-        lane.moveCars(dt, mayEnterIntersection);
-    }
-
 
     private void removeExitedCars() {
         for (Direction dir : Direction.values()) {
@@ -97,7 +90,11 @@ public class Simulation{
     private boolean hasLeftField(Car c) {
         double x = c.getX();
         double y = c.getY();
-        return x < 0 || x > Config.WINDOW_WIDTH || y < 0 || y > Config.WINDOW_HEIGHT;
-    }
+        boolean out = x <= - Config.CAR_LENGTH ||
+            x >= Config.WINDOW_WIDTH + Config.CAR_LENGTH ||
+            y <= -Config.CAR_LENGTH ||
+            y >= Config.WINDOW_HEIGHT + Config.CAR_LENGTH;
 
+        return out;
+    }
 }

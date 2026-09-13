@@ -18,10 +18,10 @@ public class Lane{
         return cars.size() >= getCapacity();
     }
 
-    /**
-     * Maximum number of cars that fit between the spawn point and stop line.
-     * Each car consumes its length plus the required safety gap.
-     */
+    public Direction getDir() {
+        return this.dir;
+    }
+
     public int getCapacity() {
         return (int) Math.floor(getLengthToStopLine() /
                 (Config.CAR_LENGTH + Config.SAFETY_GAP));
@@ -39,21 +39,10 @@ public class Lane{
         cars.add(c);
     }
 
-    /**
-     * Advances cars from front to back while preserving the required
-     * bumper-to-bumper clearance.  Cars are sorted by their current progress
-     * rather than insertion order, so this also remains correct after a lane
-     * receives cars from the intersection.
-     */
     public void moveCars(double dt) {
         moveCars(dt, true);
     }
 
-    /**
-     * Moves an incoming lane while respecting its stop line. When entry is
-     * not allowed, the lead car stops before the line and the following cars
-     * remain separated by the normal safe distance.
-     */
     public void moveCars(double dt, boolean mayEnterIntersection) {
         cars.sort(Comparator.comparingDouble(this::progress).reversed());
 
@@ -63,9 +52,7 @@ public class Lane{
             if (carAhead == null) {
                 double maxDistance = Double.POSITIVE_INFINITY;
                 if (!mayEnterIntersection) {
-                    // Car positions are their centres, so preserve a
-                    // half-length margin before the painted stop line.
-                    maxDistance = stopProgress() - Config.CAR_LENGTH / 2.0 - progress(car);
+                    maxDistance = stopProgress() - Config.CAR_LENGTH- progress(car);
                 }
                 car.move(dt, maxDistance);
             } else {
@@ -76,7 +63,6 @@ public class Lane{
         }
     }
 
-    // Larger progress always means farther along this lane's direction.
     private double progress(Car car) {
         return switch (dir) {
             case NORTH -> car.getY();
@@ -97,6 +83,24 @@ public class Lane{
             case EAST -> -(centerX + offset);
             case WEST -> centerX - offset;
         };
+    }
+
+    private double spawnProgress() {
+            return stopProgress() - getLengthToStopLine();
+        }
+
+        public boolean canSpawn() {
+        if (cars.isEmpty()) {
+            return true;
+        }
+
+        double closestToSpawn = cars.stream()
+                .mapToDouble(this::progress)
+                .min()
+                .orElse(Double.POSITIVE_INFINITY);
+
+        double minimumSpacing = Config.CAR_LENGTH + Config.SAFETY_GAP;
+        return closestToSpawn - spawnProgress() >= minimumSpacing;
     }
 
     private double getLengthToStopLine() {

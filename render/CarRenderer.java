@@ -62,6 +62,7 @@ public class CarRenderer {
 
     private void removeMissingCars(Set<Integer> seenIds) {
         cars.entrySet().removeIf(entry -> {
+
             if (seenIds.contains(entry.getKey())) {
                 return false;
             }

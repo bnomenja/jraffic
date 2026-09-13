@@ -17,7 +17,7 @@ public final class Config {
     public static final Color LINE_COLOR = Color.WHITE;
 
     /** Distance from the junction centre to each incoming stop line. */
-    public static final double STOP_LINE_OFFSET = ROAD_WIDTH;
+    public static final double STOP_LINE_OFFSET = 1.5 * ROAD_WIDTH;
 
     // --- Junction control ---
     public static final double MIN_GREEN_SECONDS = 1.5;
@@ -32,8 +32,8 @@ public final class Config {
     public static final long SPAWN_COOLDOWN_MS = 450; // int millisecondes
     public static final double CAR_SPEED = 95;
     public static final double CAR_WIDTH = 16;   
-    public static final double CAR_LENGTH = 16; 
+    public static final double CAR_LENGTH = 24; 
     /** Empty space kept between the ends of consecutive cars in one lane. */
-    public static final double SAFETY_GAP = 10;
+    public static final double SAFETY_GAP = 30;
 
 }
