@@ -23,6 +23,7 @@ public class KeyPressedHandler {
             case UP -> manager.geCarSpawner().trySpawn(Direction.SOUTH);
             case DOWN -> manager.geCarSpawner().trySpawn(Direction.NORTH);
             case R -> manager.geCarSpawner().trySpawn(Direction.random(random));
+            case C -> manager.reset();
             case ESCAPE -> System.exit(0);
             default -> {}
         }

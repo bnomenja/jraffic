@@ -36,6 +36,7 @@ Each car's color reflects the route it was randomly assigned at spawn (route can
 | `→`       | Spawn a car coming from the **west**, random route  |
 | `←`       | Spawn a car coming from the **east**, random route  |
 | `R`       | Spawn a car from a **random** direction, random route |
+| `C`       | Remove all cars from the simulation                 |
 | `Esc`     | End the simulation                                  |
 
 ## Requirements

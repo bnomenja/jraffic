@@ -54,6 +54,14 @@ public class Simulation{
         return this.elapsedSeconds;
     }
 
+    public void reset(){
+        for (Direction dir: Direction.values()){
+            inLanes.get(dir).getCars().clear();
+            outLanes.get(dir).getCars().clear();
+        }
+        intersection.getCarsInside().clear();
+    }
+
     public void update(long now){
         double nowSeconds = now / 1_000_000_000.0;
         double dt = nowSeconds - timeOfLastFrame;
